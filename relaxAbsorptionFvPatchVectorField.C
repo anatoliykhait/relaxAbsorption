@@ -72,6 +72,15 @@ Foam::relaxAbsorptionFvPatchVectorField::relaxAbsorptionFvPatchVectorField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+Foam::scalar Foam::relaxAbsorptionFvPatchVectorField::alphaR(const scalar& cellx)
+{
+    scalar Xi = (x0_ - cellx) / (x0_ - x1_);
+
+    scalar alR = 1.0 - (exp(pow(Xi, 3.5)) - 1.0) / (exp(1.0) - 1.0);
+
+    return alR;
+}
+
 void Foam::relaxAbsorptionFvPatchVectorField::updateCoeffs()
 {
     if (updated())
@@ -79,13 +88,32 @@ void Foam::relaxAbsorptionFvPatchVectorField::updateCoeffs()
         return;
     }
 
-    // Alternative initialization of the velocity field
+    // Initialization of zero velocity field at the boundary
     vectorField boundaryU(this->patch().size(), vector::zero);
 
     // forAll (boundaryU, facei)
     // {
     //     boundaryU[facei] = vector(uInterp, 0, wInterp);
     // }
+
+    // Apply relaxation zone for the internal mesh
+    const volVectorField& U = db().lookupObject<volVectorField>("U");
+    volVectorField& Ucast = const_cast<volVectorField&>(U);
+
+    forAll(U.mesh().cells(),celli)
+    {
+        const scalar& cellx = U.mesh().C()[celli][0];
+
+        if ((cellx >= x0_) &&
+            (cellx <= x1_))
+        {
+            Ucast.primitiveFieldRef()[celli] = U[celli] * alphaR(cellx);
+        }
+        else if (cellx > x1_)
+        {
+            Ucast.primitiveFieldRef()[celli] = vector(0.0, 0.0, 0.0);
+        }
+    }
 
     // Set zero velocity boundary field
     operator==(boundaryU);

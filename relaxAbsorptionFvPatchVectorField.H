@@ -94,6 +94,8 @@ public:
 
     // Member functions
 	
+        Foam::scalar alphaR(const scalar& cellx);
+
         //- Update the coefficients associated with the patch field
         virtual void updateCoeffs();
 
