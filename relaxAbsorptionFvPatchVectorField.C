@@ -104,8 +104,7 @@ void Foam::relaxAbsorptionFvPatchVectorField::updateCoeffs()
     {
         const scalar& cellx = U.mesh().C()[celli][0];
 
-        if ((cellx >= x0_) &&
-            (cellx <= x1_))
+        if ((cellx >= x0_) && (cellx <= x1_))
         {
             Ucast.primitiveFieldRef()[celli] = U[celli] * alphaR(cellx);
         }
